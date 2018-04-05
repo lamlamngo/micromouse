@@ -53,10 +53,10 @@ void setup() {
     pinMode(5,OUTPUT);
     pinMode(8,OUTPUT);
     pinMode(9,OUTPUT);
-    digitalWrite(4,HIGH);
-    digitalWrite(5,HIGH);
-    digitalWrite(8,HIGH);
-    digitalWrite(9,HIGH);
+    digitalWrite(4,LOW);
+    digitalWrite(5,LOW);
+    digitalWrite(8,LOW);
+    digitalWrite(9,LOW);
 
     pinMode(LEDR, OUTPUT);
     pinMode(LEDB, OUTPUT);
@@ -107,8 +107,8 @@ void resetLEDs(){
 
 void moveOneBlock(){
   for (int i = 0; i < 191; i++){
-    stepper1.move(1/8);
-    stepper2.move(1/8);
+    stepper1.move(1);
+    stepper2.move(1);
     delay(20);
   }
   //stop();
@@ -116,24 +116,24 @@ void moveOneBlock(){
 
 void rotateLeft90(){
   for (int i = 0; i < 95; i++){
-    stepper1.move(-1/8);
-    stepper2.move(1/8);
+    stepper1.move(-1);
+    stepper2.move(1);
     delay(20);
   }
 }
 
 void rotateRight90(){
   for (int i = 0; i < 95; i++){
-    stepper1.move(1/8);
-    stepper2.move(-1/8);
+    stepper1.move(1);
+    stepper2.move(-1);
     delay(20);
   }
 }
 
 void rotate180(){
   for (int i = 0; i < 95*2; i++){
-    stepper1.move(1/8);
-    stepper2.move(-1/8);
+    stepper1.move(1);
+    stepper2.move(-1);
     delay(20);
   }
 }
@@ -149,19 +149,19 @@ void followLeft(){
     int i = 0;
     while(i < 191){
       if(analogRead(LEFT) > 250){
-        stepper1.move(1/8);
-        stepper2.move(1/8);
-        stepper1.move(1/8);
+        stepper1.move(1);
+        stepper2.move(1);
+        stepper1.move(1);
         i += 2;}
       else if(analogRead(LEFT) < 250){
-        stepper2.move(1/8);
-        stepper1.move(1/8);
-        stepper2.move(1/8);
+        stepper2.move(1);
+        stepper1.move(1);
+        stepper2.move(1);
         i++;
       }
       else{
-        stepper1.move(1/8);
-        stepper2.move(1/8);
+        stepper1.move(1);
+        stepper2.move(1);
         i++;
       }
       delay(20);
