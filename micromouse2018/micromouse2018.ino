@@ -42,7 +42,7 @@ BasicStepperDriver stepper1(MOTOR_STEPS, DIR1,STEP1);
 BasicStepperDriver stepper2(MOTOR_STEPS, DIR2, STEP2);
 
 ////Mode Acceleration
-BasicStepperDriver::Mode current_mode = BasicStepperDriver::Mode::LINEAR_SPEED;
+BasicStepperDriver::Mode current_mode = BasicStepperDriver::Mode::CONSTANT_SPEED;
 short accel = 200;
 short decel = 200;
 
@@ -62,22 +62,41 @@ void setup() {
     digitalWrite(8,LOW);
     digitalWrite(9,LOW);
 
-    Serial.begin(9600);
+    pinMode(LEDR, OUTPUT);
+    pinMode(LEDB, OUTPUT);
+    pinMode(LEDG, OUTPUT);
 }
 
 void loop() {
   if (checkFront()){
+    resetLEDs();
+    digitalWrite(LEDR,HIGH);
     moveOneBlock();
   } else if (checkLeft()){
+    resetLEDs();
+    digitalWrite(LEDB,HIGH);
     rotateLeft90();
     moveOneBlock();
   } else if (checkRight()){
+    resetLEDs();
+    digitalWrite(LEDG,HIGH);
     rotateRight90();
     moveOneBlock();
   } else{
+    resetLEDs();
+    digitalWrite(LEDR,HIGH);
+    digitalWrite(LEDG,HIGH);
+    digitalWrite(LEDB,HIGH);
     rotate180();
     moveOneBlock();
   }
+  delay(100);
+}
+
+void resetLEDs(){
+  digitalWrite(LEDB, LOW);
+  digitalWrite(LEDG, LOW);
+  digitalWrite(LEDR, LOW);
 }
 
 void moveOneBlock(){
@@ -86,6 +105,7 @@ void moveOneBlock(){
     stepper2.move(1);
     delay(20);
   }
+  //stop();
 }
 
 void rotateLeft90(){
@@ -112,15 +132,20 @@ void rotate180(){
   }  
 }
 
-void checkFront(){
+void stop(){
+  stepper1.startBrake();
+  stepper2.startBrake();
+}
+
+bool checkFront(){
   return analogRead(FRONT) <= 50;
 }
 
-void checkLeft(){
-  return analogRead(LEFT) <= 140;
+bool checkLeft(){
+  return analogRead(LEFT) <= 150;
 }
 
-void checkRight(){
-  return analogRead(RIGHT) <= 50;
+bool checkRight(){
+  return analogRead(RIGHT) <= 150;
 }
 
