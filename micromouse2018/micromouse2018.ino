@@ -28,7 +28,7 @@
 #define STEP2 6
 
 //Define the boundary for the side sensors. The robot should reangle itself if its too close
-//or too far from walls. 
+//or too far from walls.
 #define sideClose 300
 #define sideFar 240
 
@@ -39,8 +39,8 @@ BasicStepperDriver stepper2(MOTOR_STEPS, DIR2, STEP2);
 
 ////Mode Acceleration
 BasicStepperDriver::Mode current_mode = BasicStepperDriver::Mode::LINEAR_SPEED;
-short accel = 200;
-short decel = 200;
+short accel = 100;
+short decel = 100;
 
 void setup() {
 
@@ -53,17 +53,17 @@ void setup() {
     pinMode(5,OUTPUT);
     pinMode(8,OUTPUT);
     pinMode(9,OUTPUT);
-    digitalWrite(4,LOW);
-    digitalWrite(5,LOW);
-    digitalWrite(8,LOW);
-    digitalWrite(9,LOW);
+    digitalWrite(4,HIGH);
+    digitalWrite(5,HIGH);
+    digitalWrite(8,HIGH);
+    digitalWrite(9,HIGH);
 
     pinMode(LEDR, OUTPUT);
     pinMode(LEDB, OUTPUT);
     pinMode(LEDG, OUTPUT);
 
     Serial.begin(9600);
-    
+
 }
 
 void loop() {
@@ -90,7 +90,7 @@ void loop() {
 //    moveOneBlock();
 //  }
 //  delay(100);
-    
+
 //    followLeft();
 //    backUpLeft();
     navieLeft();
@@ -107,8 +107,8 @@ void resetLEDs(){
 
 void moveOneBlock(){
   for (int i = 0; i < 191; i++){
-    stepper1.move(1);
-    stepper2.move(1);
+    stepper1.move(1/8);
+    stepper2.move(1/8);
     delay(20);
   }
   //stop();
@@ -116,26 +116,26 @@ void moveOneBlock(){
 
 void rotateLeft90(){
   for (int i = 0; i < 95; i++){
-    stepper1.move(-1);
-    stepper2.move(1);
+    stepper1.move(-1/8);
+    stepper2.move(1/8);
     delay(20);
   }
 }
 
 void rotateRight90(){
   for (int i = 0; i < 95; i++){
-    stepper1.move(1);
-    stepper2.move(-1);
+    stepper1.move(1/8);
+    stepper2.move(-1/8);
     delay(20);
   }
 }
 
 void rotate180(){
   for (int i = 0; i < 95*2; i++){
-    stepper1.move(1);
-    stepper2.move(-1);
+    stepper1.move(1/8);
+    stepper2.move(-1/8);
     delay(20);
-  }  
+  }
 }
 
 void stop(){
@@ -144,43 +144,24 @@ void stop(){
 }
 
 //Follow the left wall for one block
-//If too close or too far from left wall, will adjust servo on one side. 
+//If too close or too far from left wall, will adjust servo on one side.
 void followLeft(){
-//    for (int i = 0; i < 191; i++){
-//      if(analogRead(LEFT) > sideClose){
-//      digitalWrite(LEDR,HIGH);
-//    }
-//    else if(analogRead(LEFT) < sideFar){
-//      digitalWrite(LEDB, HIGH);
-//    }
-//    else{
-//      resetLEDs();
-//    }
-//    stepper2.move(1);
-//    if(analogRead(LEFT) > sideClose){
-//      stepper1.move(1);
-//    }
-//    else if(analogRead(LEFT) < sideFar){
-//      stepper2.move(1);
-//    }
-//    stepper1.move(1);
-//    delay(20);
     int i = 0;
     while(i < 191){
       if(analogRead(LEFT) > 250){
-        stepper1.move(1);
-        stepper2.move(1);
-        stepper1.move(1);
+        stepper1.move(1/8);
+        stepper2.move(1/8);
+        stepper1.move(1/8);
         i += 2;}
       else if(analogRead(LEFT) < 250){
-        stepper2.move(1);
-        stepper1.move(1);
-        stepper2.move(1);
+        stepper2.move(1/8);
+        stepper1.move(1/8);
+        stepper2.move(1/8);
         i++;
       }
       else{
-        stepper1.move(1);
-        stepper2.move(1);
+        stepper1.move(1/8);
+        stepper2.move(1/8);
         i++;
       }
       delay(20);
@@ -188,7 +169,7 @@ void followLeft(){
 }
 
 //Trying to overcome the delay with a limited adjustment of direction once a while
-//Can't do sharp turns. Currently the only working sensor auxilerated function. 
+//Can't do sharp turns. Currently the only working sensor auxilerated function.
 void navieLeft(){
     int i = 0;
     int fullDistence = 190;
@@ -197,19 +178,15 @@ void navieLeft(){
         if(analogRead(LEFT) > 260){
           stepper1.move(1);
           stepper2.move(-1);
-//          stepper1.move(1);
-//          stepper2.move(-1);
           delay(10);
       }
       else if(analogRead(LEFT) < 220){
           stepper2.move(1);
           stepper1.move(-1);
-//          stepper2.move(1);
-//          stepper1.move(-1);  
-          delay(10);        
+          delay(10);
       }
       }
-      
+
       stepper1.move(1);
       stepper2.move(1);
       delay(10);
@@ -225,26 +202,22 @@ void navieRight(){
         if(analogRead(RIGHT) < 260){
           stepper1.move(1);
           stepper2.move(-1);
-//          stepper1.move(1);
-//          stepper2.move(-1);
           delay(10);
       }
       else if(analogRead(RIGHT) > 220){
           stepper2.move(1);
           stepper1.move(-1);
-//          stepper2.move(1);
-//          stepper1.move(-1);  
-          delay(10);        
+          delay(10);
       }
       }
-      
+
       stepper1.move(1);
       stepper2.move(1);
       delay(10);
       i += 1;
     }
 }
-//Backup one grid following left wall. 
+//Backup one grid following left wall.
 void backUpLeft(){
     int i = 0;
     while(i < 191){
@@ -279,4 +252,3 @@ bool checkLeft(){
 bool checkRight(){
   return analogRead(RIGHT) <= 150;
 }
-
