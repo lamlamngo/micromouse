@@ -41,9 +41,20 @@
 BasicStepperDriver stepper1(MOTOR_STEPS, DIR1,STEP1);
 BasicStepperDriver stepper2(MOTOR_STEPS, DIR2, STEP2);
 
+////Mode Acceleration
+//stepper1.Mode current_mode_1 = LINEAR_SPEED;
+//stepper2.Mode current_mode_2 = LINEAR_SPEED;
+BasicStepperDriver::Mode current_mode = BasicStepperDriver::Mode::CONSTANT_SPEED;
+short accel = 200;
+short decel = 200;
+
 void setup() {
+
+    //setup two stepper motors in full step mode
     stepper1.begin(RPM, MICROSTEPS);
+    stepper1.setSpeedProfile(current_mode, accel, decel);
     stepper2.begin(RPM, MICROSTEPS);
+    stepper2.setSpeedProfile(current_mode, accel, decel);
     pinMode(4,OUTPUT);
     pinMode(5,OUTPUT);
     pinMode(8,OUTPUT);
@@ -57,15 +68,23 @@ void setup() {
 }
 
 void loop() {
-
-  Serial.print("Left Sensor Reading: ");
-  Serial.println(analogRead(A4));
-
-  Serial.print("Right Sensor Reading: ");
-  Serial.println(analogRead(A2));
-
-  Serial.print("Front Sensor Reading: ");
-  Serial.println(analogRead(A0));
-
-  delay(1000);
+  rotate90();
+  delay(5000);
 }
+
+void moveOneBlock(){
+  for (int i = 0; i < 191; i++){
+    stepper1.move(1);
+    stepper2.move(1);
+    delay(20);
+  }
+}
+
+void rotate90(){
+  for (int i = 0; i < 95; i++){
+    stepper1.move(-1);
+    stepper2.move(1);
+    delay(20);
+  }
+}
+
