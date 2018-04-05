@@ -11,6 +11,17 @@
 #include <Arduino.h>
 #include "BasicStepperDriver.h"
 
+//define pin outs sensors
+#define LEFT A4
+#define RIGHT A2
+#define FRONT A0
+
+//define pin outs button and LEDS
+#define LEDR 13
+#define LEDB 11
+#define LEDG 10
+#define button 12
+
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
 #define MOTOR_STEPS 200
 #define RPM 120
@@ -30,9 +41,6 @@
 BasicStepperDriver stepper1(MOTOR_STEPS, DIR1,STEP1);
 BasicStepperDriver stepper2(MOTOR_STEPS, DIR2, STEP2);
 
-//Uncomment line to use enable/disable functionality
-//BasicStepper
-boolean run = false;
 void setup() {
     stepper1.begin(RPM, MICROSTEPS);
     stepper2.begin(RPM, MICROSTEPS);
@@ -49,7 +57,7 @@ void setup() {
 }
 
 void loop() {
-  
+
   Serial.print("Left Sensor Reading: ");
   Serial.println(analogRead(A4));
 
