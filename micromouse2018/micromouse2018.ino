@@ -42,9 +42,7 @@ BasicStepperDriver stepper1(MOTOR_STEPS, DIR1,STEP1);
 BasicStepperDriver stepper2(MOTOR_STEPS, DIR2, STEP2);
 
 ////Mode Acceleration
-//stepper1.Mode current_mode_1 = LINEAR_SPEED;
-//stepper2.Mode current_mode_2 = LINEAR_SPEED;
-BasicStepperDriver::Mode current_mode = BasicStepperDriver::Mode::CONSTANT_SPEED;
+BasicStepperDriver::Mode current_mode = BasicStepperDriver::Mode::LINEAR_SPEED;
 short accel = 200;
 short decel = 200;
 
@@ -80,11 +78,27 @@ void moveOneBlock(){
   }
 }
 
-void rotate90(){
+void rotateLeft90(){
   for (int i = 0; i < 95; i++){
     stepper1.move(-1);
     stepper2.move(1);
     delay(20);
   }
+}
+
+void rotateRight90(){
+  for (int i = 0; i < 95; i++){
+    stepper1.move(1);
+    stepper2.move(-1);
+    delay(20);
+  }
+}
+
+void rotate180(){
+  for (int i = 0; i < 95*2; i++){
+    stepper1.move(1);
+    stepper2.move(-1);
+    delay(20);
+  }  
 }
 
