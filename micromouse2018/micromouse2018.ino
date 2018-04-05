@@ -66,8 +66,18 @@ void setup() {
 }
 
 void loop() {
-  rotate90();
-  delay(5000);
+  if (checkFront()){
+    moveOneBlock();
+  } else if (checkLeft()){
+    rotateLeft90();
+    moveOneBlock();
+  } else if (checkRight()){
+    rotateRight90();
+    moveOneBlock();
+  } else{
+    rotate180();
+    moveOneBlock();
+  }
 }
 
 void moveOneBlock(){
@@ -100,5 +110,17 @@ void rotate180(){
     stepper2.move(-1);
     delay(20);
   }  
+}
+
+void checkFront(){
+  return analogRead(FRONT) <= 50;
+}
+
+void checkLeft(){
+  return analogRead(LEFT) <= 140;
+}
+
+void checkRight(){
+  return analogRead(RIGHT) <= 50;
 }
 
