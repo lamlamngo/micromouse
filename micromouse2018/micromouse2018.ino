@@ -4,7 +4,7 @@
 //define pin outs sensors
 #define LEFT A4
 #define RIGHT A2
-#define FRONT A0
+#define FRONT A5
 
 //define pin outs button and LEDS
 #define LEDR 13
@@ -14,7 +14,7 @@
 
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
 #define MOTOR_STEPS 200
-#define RPM 120
+#define RPM 60
 
 // Since microstepping is set externally, make sure this matches the selected mode
 // If it doesn't, the motor will move at a different RPM than chosen
@@ -67,36 +67,29 @@ void setup() {
 }
 
 void loop() {
-//  if (checkFront()){
-//    resetLEDs();
+  if (checkFront()){
+    resetLEDs();
 //    digitalWrite(LEDR,HIGH);
-//    moveOneBlock();
-//  } else if (checkLeft()){
-//    resetLEDs();
+    forwardOneBlock();
+  } else if (checkLeft()){
+    resetLEDs();
 //    digitalWrite(LEDB,HIGH);
-//    rotateLeft90();
-//    moveOneBlock();
-//  } else if (checkRight()){
-//    resetLEDs();
+    rotateRight90();
+  } else if (checkRight()){
+    resetLEDs();
 //    digitalWrite(LEDG,HIGH);
-//    rotateRight90();
-//    moveOneBlock();
-//  } else{
-//    resetLEDs();
+    rotateLeft90();
+  } else{
+    resetLEDs();
 //    digitalWrite(LEDR,HIGH);
 //    digitalWrite(LEDG,HIGH);
 //    digitalWrite(LEDB,HIGH);
-//    rotate180();
-//    moveOneBlock();
-//  }
-//  delay(100);
+    rotate180();
+  }
+  delay(1000);
 
 //    followLeft();
 //    backUpLeft();
-    navieLeft();
-    delay(5000);
-
-
 }
 
 void resetLEDs(){
@@ -221,12 +214,12 @@ void navieRight(){
 void backUpLeft(){
     int i = 0;
     while(i < 191){
-      if(analogRead(LEFT) > 250){
+      if(analogRead(LEFT) > 260){
         stepper1.move(-1);
         stepper2.move(-1);
         stepper1.move(-1);
         i += 2;}
-      else if(analogRead(LEFT) < 250){
+      else if(analogRead(LEFT) < 220){
         stepper2.move(-1);
         stepper1.move(-1);
         stepper2.move(-1);
@@ -241,8 +234,66 @@ void backUpLeft(){
   }
 }
 
+void forwardOneBlock(){
+    int i = 0;
+    
+    while(i < 200 || analogRead(FRONT) < 438){
+        if(leftAvailable()){
+           if(analogRead(LEFT) > 260){
+              stepper1.move(-1);
+              stepper2.move(-1);
+              stepper1.move(-1);
+              i += 2;}
+           else if(analogRead(LEFT) < 220){
+              stepper2.move(-1);
+              stepper1.move(-1);
+              stepper2.move(-1);
+              i += 2;
+           }
+           else{
+              stepper1.move(-1);
+              stepper2.move(-1);
+              i++;
+           }
+        }
+        else if(rightAvailable()){
+           if(analogRead(RIGHT) > 260){
+              stepper2.move(-1);
+              stepper1.move(-1);
+              stepper2.move(-1);
+              i += 2;;
+              }
+           else if(analogRead(LEFT) < 220){
+              stepper1.move(-1);
+              stepper2.move(-1);
+              stepper1.move(-1);
+              i += 2;
+           }
+           else{
+              stepper1.move(-1);
+              stepper2.move(-1);
+              i++;
+           }
+        }
+        else{
+           stepper1.move(-1);
+           stepper2.move(-1);
+           i++;
+        }
+        delay(20);        
+    }
+}
+
+bool leftAvailable(){
+    return analogRead(LEFT) >= 150;
+}
+
+bool rightAvailable(){
+    return analogRead(RIGHT) >= 150;
+}
+
 bool checkFront(){
-  return analogRead(FRONT) <= 50;
+  return analogRead(FRONT) <= 150;
 }
 
 bool checkLeft(){
