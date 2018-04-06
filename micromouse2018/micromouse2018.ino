@@ -237,18 +237,18 @@ void backUpLeft(){
 void forwardOneBlock(){
     int i = 0;
     
-    while(i < 200 || analogRead(FRONT) < 438){
+    while(i < 200 && analogRead(FRONT) < 438){
         if(leftAvailable()){
            if(analogRead(LEFT) > 260){
               stepper1.move(-1);
               stepper2.move(-1);
               stepper1.move(-1);
-              i += 2;}
+              i += 1;}
            else if(analogRead(LEFT) < 220){
               stepper2.move(-1);
               stepper1.move(-1);
               stepper2.move(-1);
-              i += 2;
+              i += 1;
            }
            else{
               stepper1.move(-1);
@@ -261,13 +261,13 @@ void forwardOneBlock(){
               stepper2.move(-1);
               stepper1.move(-1);
               stepper2.move(-1);
-              i += 2;;
+              i += 1;;
               }
            else if(analogRead(LEFT) < 220){
               stepper1.move(-1);
               stepper2.move(-1);
               stepper1.move(-1);
-              i += 2;
+              i += 1;
            }
            else{
               stepper1.move(-1);
