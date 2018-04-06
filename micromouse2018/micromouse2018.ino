@@ -67,29 +67,7 @@ void setup() {
 }
 
 void loop() {
-  if (checkFront()){
-    resetLEDs();
-//    digitalWrite(LEDR,HIGH);
-    forwardOneBlock();
-  } else if (checkLeft()){
-    resetLEDs();
-//    digitalWrite(LEDB,HIGH);
-    rotateRight90();
-  } else if (checkRight()){
-    resetLEDs();
-//    digitalWrite(LEDG,HIGH);
-    rotateLeft90();
-  } else{
-    resetLEDs();
-//    digitalWrite(LEDR,HIGH);
-//    digitalWrite(LEDG,HIGH);
-//    digitalWrite(LEDB,HIGH);
-    rotate180();
-  }
-  delay(1000);
-
-//    followLeft();
-//    backUpLeft();
+  wallhungging();
 }
 
 void resetLEDs(){
@@ -107,7 +85,7 @@ void moveOneBlock(){
   //stop();
 }
 
-void rotateLeft90(){
+void rotateRight90(){
   for (int i = 0; i < 95; i++){
     stepper1.move(-1);
     stepper2.move(1);
@@ -115,7 +93,7 @@ void rotateLeft90(){
   }
 }
 
-void rotateRight90(){
+void rotateLeft90(){
   for (int i = 0; i < 95; i++){
     stepper1.move(1);
     stepper2.move(-1);
@@ -210,6 +188,34 @@ void navieRight(){
       i += 1;
     }
 }
+
+bool flagl = false;
+bool flagf = true;
+void wallhungging(){
+  if (leftAvailable()){
+    flagl = true;
+  } else{
+    flagl = false;
+  }
+
+  if (flagl){
+    if (!checkFront()){
+      flagf = true;
+    } else{
+      flagf = false;
+    }
+
+    if (!flagf){
+      forwardOneBlock();
+    } else{
+      rotateRight90();
+    }
+  } else{
+    rotateLeft90();
+  }
+
+  delay(400);
+}
 //Backup one grid following left wall.
 void backUpLeft(){
     int i = 0;
@@ -236,7 +242,7 @@ void backUpLeft(){
 
 void forwardOneBlock(){
     int i = 0;
-    
+
     while(i < 200 && analogRead(FRONT) < 438){
         if(leftAvailable()){
            if(analogRead(LEFT) > 260){
@@ -263,7 +269,7 @@ void forwardOneBlock(){
               stepper2.move(-1);
               i += 1;;
               }
-           else if(analogRead(LEFT) < 220){
+           else if(analogRead(RIGHT) < 220){
               stepper1.move(-1);
               stepper2.move(-1);
               stepper1.move(-1);
@@ -280,7 +286,7 @@ void forwardOneBlock(){
            stepper2.move(-1);
            i++;
         }
-        delay(20);        
+        delay(20);
     }
 }
 
