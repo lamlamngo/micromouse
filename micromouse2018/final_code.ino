@@ -181,7 +181,7 @@ bool isDeadEnd(coord current){
   return false;
 }
 
-bool win(coord current, coord[] goals){
+bool win(coord current, coord goals[]){
   if (isValid(current)){
     for (int i = 0; i < sizeof(goals); i++){
       if (current.x == goals[i].x && current.y == goals[i].y){
@@ -234,4 +234,88 @@ int optimalDirection(coord current, int heading){
   }
 
   return leastDir;
+}
+
+byte updateWalls(){
+  byte res = 15;
+  byte forward = 0;
+  byte backward = 0;
+  byte left = 0;
+  byte right = 0;
+
+  switch(globalHeading){
+    case 1:
+      if (analogRead(FRONT) >= 150){
+        backward = 1;
+      }
+
+      if (analogRead(LEFT) >= 150){
+        left = 1;
+      }
+
+      if (analogRead(RIGHT) >= 150){
+        right = 1;
+      }
+
+      wallReading -= backward + left + right;
+      break;
+    case 2:
+      if (analogRead(FRONT) >= 150){
+        forward = 1;
+      }
+
+      if (analogRead(LEFT) >= 150){
+        right = 1;
+      }
+
+      if (analogRead(RIGHT) >= 150){
+        left = 1;
+      }
+
+      wallReading -= forward + left + right;
+      break;
+    case 4:
+      if (analogRead(FRONT) >= 150){
+        right = 1;
+      }
+
+      if (analogRead(LEFT) >= 150){
+        forward = 1;
+      }
+
+      if (analogRead(RIGHT) >= 150){
+        left = 1;
+      }
+
+      wallReading -= forward + left + right;
+      break;
+    case 8:
+      if (analogRead(FRONT) >= 150){
+        left = 1;
+      }
+
+      if (analogRead(LEFT) >= 150){
+        backward = 1;
+      }
+
+      if (analogRead(RIGHT) >= 150){
+        forward = 1;
+      }
+
+      wallReading -= backward + left + forward;
+      break;
+  }
+
+  return wallReading;
+}
+
+void floodfill(coord current, coord goals[]){
+  StackList<coord> coords;
+
+  maze[current.x][current.y].walls =
+
+}
+
+void solveMaze(coord goals[]){
+
 }
