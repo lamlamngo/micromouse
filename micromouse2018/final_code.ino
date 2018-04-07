@@ -478,3 +478,57 @@ void solveMaze(coord goals[], coord current, bool isMoving){
 
   globalEnd = cur;
 }
+
+void reflood(){
+  //refill the maze for most optimistic values but now with walls
+
+  instantiateReFlood();
+
+  //run flood fill but without actual motion
+  coord desired[] = {{(X/2)-1,(Y/2)-1},{(X/2)-1,(Y/2)},{(X/2),(Y/2)-1},{X/2,Y/2}}
+  coord cur = {0,0};
+  solveMaze(desired[], cur, false);
+
+  //NOW WE RUN FAST
+  speedRun();
+}
+
+void speedRun(){
+  coord cur = globalCoord;
+  byte dir = globalHeading;
+
+  while ((cur.x != globalEnd.x) && (cur.y != globalEnd.y)){
+    byte optimalDir = optimalDirection(cur,dir);
+    coord next = updatecoord(cur,optimalDir);
+
+    if (optimalDir == dir){
+      commands.push({3});
+    } else{
+      commands.push(createCommand(cur,next,optimalDir));
+    }
+
+    cur = next;
+  }
+}
+
+void resetToCoord(coord togo ){
+  for (int i = 0; i < X; i++){
+    for (int j = 0; i < Y; j++){
+      maze[i][j].distance = calcDist(i,j,togo.x,togo.y);
+    }
+  }
+}
+
+void loop(){
+  coord goals[] = {{(X/2)-1,(Y/2)-1},{(X/2)-1,(Y/2)},{(X/2),(Y/2)-1},{X/2,Y/2}};
+  solveMaze(goals, globalCoord, true);
+  coord returnCoord[] = {{0,0}};
+  resetToCoord(returnCoord[0]);
+  floodfill(returnCoord,globalCoord,true);
+
+  reflood();
+
+  while (!commands.isEmpty()){
+    executeCommand(command.pop());
+  }
+}
