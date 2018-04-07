@@ -36,8 +36,8 @@ short decel = 100;
 
 //struct for a coordinate
 typedef struct _coord{
-  int x;
-  int y;
+  byte x;
+  byte y;
 } coord;
 
 //struct for a cell in a maze
@@ -61,6 +61,10 @@ int orientation[] = {1,2,4,8};
 #define X 6
 #define Y 6
 
+byte globalHeading = 4;
+coord globalCoord = {0,0};
+coord globalEnd = {0,0};
+
 void setup(){
   stepper1.begin(RPM, MICROSTEPS);
   stepper1.setSpeedProfile(current_mode, accel, decel);
@@ -79,13 +83,87 @@ void setup(){
   pinMode(button, OUTPUT);
 }
 
+void turnLeft(){
+  for (int i = 0; i< 95; i++){
+    stepper1.move(1);
+    stepper2.move(-1);
+    delay(20);
+  }
+}
+
+void turnRight(){
+  for (int i = 0; i < 95; i++){
+    stepper1.move(-1);
+    stepper2.move(1);
+    delay(20);
+  }
+}
+
+void forwardOneBlock(){
+    int i = 0;
+
+    while(i < 200 && analogRead(FRONT) < 438){
+        if(leftAvailable()){
+           if(analogRead(LEFT) > 260 && leftAvailable()){
+              stepper2.move(-1);
+              stepper1.move(-1);
+              stepper2.move(-1);
+              i += 1;}
+           else if(analogRead(LEFT) < 220 && leftAvailable()){
+              stepper1.move(-1);
+              stepper2.move(-1);
+              stepper1.move(-1);
+              i += 1;
+           }
+           else{
+              stepper1.move(-1);
+              stepper2.move(-1);
+              i++;
+           }
+        }
+        else if(rightAvailable()){
+           if(analogRead(RIGHT) > 260 && rightAvailable()){
+              stepper1.move(-1);
+              stepper2.move(-1);
+              stepper1.move(-1);
+              i += 1;;
+              }
+           else if(analogRead(RIGHT) < 220 && rightAvailable()){
+              stepper2.move(-1);
+              stepper1.move(-1);
+              stepper2.move(-1);
+              i += 1;
+           }
+           else{
+              stepper1.move(-1);
+              stepper2.move(-1);
+              i++;
+           }
+        }
+        else{
+           stepper1.move(-1);
+           stepper2.move(-1);
+           i++;
+        }
+        delay(20);
+    }
+}
+
+bool leftAvailable(){
+    return analogRead(LEFT) >= 150;
+}
+
+bool rightAvailable(){
+    return analogRead(RIGHT) >= 150;
+}
+
 //calculate optimistic distance from one cell to another cell
-void int calcDist(int x, int y, int goalX, int goalY){
+int calcDist(byte x, byte y, byte goalX, byte goalY){
   return abs(goalY - y) + abs(goalX - x);
 }
 
 //optimistic distance from one cell to the square in the center
-void int calcDistToGoal(int x, int y, int maze_dimension){
+int calcDistToGoal(byte x, byte y, byte maze_dimension){
   int center = maze_dimension/2;
   int dist = 0;
 
@@ -515,6 +593,48 @@ void resetToCoord(coord togo ){
   for (int i = 0; i < X; i++){
     for (int j = 0; i < Y; j++){
       maze[i][j].distance = calcDist(i,j,togo.x,togo.y);
+    }
+  }
+}
+
+void instantiate(){
+  for (int i = 0; i < X; i++){
+    for (int j = 0; j < Y; j++){
+      maze[i][j].distance = calcDistToGoal(i,j,X);
+      maze[i][j].walls = 15; //no wall
+
+      if (i == 0){
+        //top row
+        maze[i][j].walls = 14;
+      }
+
+      if (i == X - 1){
+        //bottom row
+        maze[i][j].walls = 13;
+      }
+
+      if (j == Y - 1){
+        //rightest column
+        maze[i][j].walls = 11;
+      }
+
+      if (j == 0){
+        //leftest column
+        maze[i][j].walls = 7;
+      }
+    }
+  }
+
+  maze[0][0].walls = 4;
+  maze[X-1][0].walls = 5;
+  maze[0][Y-1].walls = 10;
+  maze[X-1][Y-1].walls = 9;
+}
+
+void instantiateReFlood(){
+  for (int i = 0; i < X; i++){
+    for (int j = 0; j < Y; j++){
+      maze[i][j].distance = calcDistToGoal(i,j,X);
     }
   }
 }
