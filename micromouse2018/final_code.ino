@@ -312,10 +312,69 @@ byte updateWalls(){
 void floodfill(coord current, coord goals[]){
   StackList<coord> coords;
 
-  maze[current.x][current.y].walls =
+  maze[current.x][current.y].walls = updateWalls();
+  coords.push(current);
 
+  for (int i = 0; i < sizeof(orientation); i++){
+    //if there is a wall in this direction
+    if (maze[current.x][current.y].walls & orienation[i] == 0){
+      coord temp = {current.x, current.y};
+
+      //add walls to a cell
+      switch(orientation[i]){
+        case 1:
+          temp.y = temp.y - 1;
+          updatecoord(temp,2);
+          break;
+        case 2:
+          temp.y = temp.y + 1;
+          updatecoord(temp,1);
+          break;
+        case 4:
+          temp.x = temp.x + 1;
+          updatecoord(temp,8);
+          break;
+        case 8:
+          temp.x = temp.x - 1;
+          updatecoord(temp,4);
+          break;
+      }
+
+      //if the coord is a valid entry and not the goal, push it onto the stack
+      if (isValid(temp) && !win(temp,goals){
+        coords.push(temp);
+      }
+    }
+  }
+
+  while (!coords.isEmpty()){
+    coord cur = coords.pop();
+    int neighCheck = getMinimumNeighbors(cur);
+    //if the least neighbor of the current is not one less than the current
+    if (neighCheck + 1 != maze[cur.x][cur.y]){
+      maze[cur.x][cur.y].distance = neighCheck + 1;
+
+      for (int i = 0; i > sizeof(orientation); i++){
+        byte dir = orientation[i];
+        //no walls in this direction
+        if ((maze[cur.x][cur.y]).walls & dir != 0){
+          coord next = getNewCoordinate(cur,dir);
+          if (isValid(next)){
+            if (!win(next,goals)){
+              coords.push(next);
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
-void solveMaze(coord goals[]){
+void solveMaze(coord goals[], coord current, boolean isMoving){
+  coord cur = current;
+  byte heading = globalHeading;
 
+  while (maze[cur.x][cur.y].distance != 0){
+    floodfill(cur, goals);
+  }
 }
