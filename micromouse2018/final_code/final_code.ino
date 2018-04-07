@@ -58,8 +58,8 @@ QueueArray<command> commands;
 int orientation[] = {1,2,4,8};
 
 //maze constant
-#define X 6
-#define Y 6
+#define X 16
+#define Y 16
 
 entry maze[X][Y];
 
@@ -85,7 +85,9 @@ void setup(){
   pinMode(button, OUTPUT);
 
   instantiate();
-  printMaze();
+  //printMaze();
+
+  Serial.begin(9600);
 }
 
 void printMaze(){
@@ -98,7 +100,7 @@ void printMaze(){
   }
 }
 
-void turnLeft(){
+void turnRight(){
   for (int i = 0; i< 95; i++){
     stepper1.move(1);
     stepper2.move(-1);
@@ -106,7 +108,7 @@ void turnLeft(){
   }
 }
 
-void turnRight(){
+void turnLeft(){
   for (int i = 0; i < 95; i++){
     stepper1.move(-1);
     stepper2.move(1);
@@ -122,10 +124,10 @@ void turn180(){
   }
 }
 
-void forwardOneBlock(){
+void forwardOneBlockFaster(){
     int i = 0;
 
-    while(i < 200 && analogRead(FRONT) < 438){
+    while(i < 191 && analogRead(FRONT) < 435){
         if(leftAvailable()){
            if(analogRead(LEFT) > 260 && leftAvailable()){
               stepper2.move(-1);
@@ -168,7 +170,57 @@ void forwardOneBlock(){
            stepper2.move(-1);
            i++;
         }
-        delay(20);
+        delay(9);
+    }
+}
+
+void forwardOneBlock(){
+    int i = 0;
+
+    while(i < 191 && analogRead(FRONT) < 435){
+        if(leftAvailable()){
+           if(analogRead(LEFT) > 260 && leftAvailable()){
+              stepper2.move(-1);
+              stepper1.move(-1);
+              stepper2.move(-1);
+              i += 1;}
+           else if(analogRead(LEFT) < 220 && leftAvailable()){
+              stepper1.move(-1);
+              stepper2.move(-1);
+              stepper1.move(-1);
+              i += 1;
+           }
+           else{
+              stepper1.move(-1);
+              stepper2.move(-1);
+              i++;
+           }
+        }
+        else if(rightAvailable()){
+           if(analogRead(RIGHT) > 260 && rightAvailable()){
+              stepper1.move(-1);
+              stepper2.move(-1);
+              stepper1.move(-1);
+              i += 1;;
+              }
+           else if(analogRead(RIGHT) < 220 && rightAvailable()){
+              stepper2.move(-1);
+              stepper1.move(-1);
+              stepper2.move(-1);
+              i += 1;
+           }
+           else{
+              stepper1.move(-1);
+              stepper2.move(-1);
+              i++;
+           }
+        }
+        else{
+           stepper1.move(-1);
+           stepper2.move(-1);
+           i++;
+        }
+        delay(15);
     }
 }
 
@@ -216,17 +268,17 @@ coord getNewCoordinate(coord current, int orientation){
   coord newCoord = {0,0};
 
   if (orientation == 1){
-    newCoord.x = current.x;
-    newCoord.y = current.y - 1;
-  } else if (orientation == 2){
-    newCoord.x = current.x;
-    newCoord.y = current.y + 1;
-  } else if (orientation == 4){
-    newCoord.x = current.x + 1;
     newCoord.y = current.y;
-  } else if (orientation == 8){
     newCoord.x = current.x - 1;
+  } else if (orientation == 2){
     newCoord.y = current.y;
+    newCoord.x = current.x + 1;
+  } else if (orientation == 4){
+    newCoord.y = current.y + 1;
+    newCoord.x = current.x;
+  } else if (orientation == 8){
+    newCoord.y = current.y - 1;
+    newCoord.x = current.x;
   }
 
   return newCoord;
@@ -236,11 +288,11 @@ coord getNewCoordinate(coord current, int orientation){
 int getMinimumNeighbors(coord current){
   int minVal = -1;
 
-  for (int i = 0; i < sizeof(orientation); i++){
+  for (int i = 0; i < 4; i++){
 
     //check if accessbile
 
-    if (maze[current.x][current.y].walls && orientation[i] != 0){
+    if (byte(maze[current.x][current.y].walls & orientation[i]) != 0){
       coord neighbor = getNewCoordinate(current, orientation[i]);
 
       //if valid cell
@@ -296,7 +348,12 @@ bool win(coord current, coord goals[]){
 //add a wall to a cell
 void updatecoord(coord current, int walldir){
   if (isValid(current)){
-    if (maze[current.x][current.y].walls & walldir != 0){
+    if (byte(maze[current.x][current.y].walls & walldir) != 0){
+      if (walldir == 2){
+        walldir == 1;
+      } else if (walldir == 1){
+        walldir == 2;
+      }
       maze[current.x][current.y].walls -= walldir;
     }
   }
@@ -308,7 +365,7 @@ int optimalDirection(coord current, int heading){
   int leastNextVal = sizeof(maze)*sizeof(maze);
   int leastDir = heading;
 
-  if (maze[current.x][current.y].walls & heading != 0){
+  if (byte(maze[current.x][current.y].walls & heading) != 0){
     coord leastnextTemp = getNewCoordinate(current, heading);
 
     if (isValid(leastnextTemp)){
@@ -317,10 +374,10 @@ int optimalDirection(coord current, int heading){
     }
   }
 
-  for (int i =0; i < sizeof(orientation); i++){
+  for (int i =0; i < 4; i++){
     int dir = orientation[i];
 
-    if (maze[current.x][current.y].walls & dir != 0){
+    if (byte(maze[current.x][current.y].walls & dir) != 0){
       coord dirCoord = getNewCoordinate(current, dir);
 
       if (isValid(dirCoord)){
@@ -350,48 +407,33 @@ byte updateWalls(){
       }
 
       if (analogRead(LEFT) >= 150){
-        left = 1;
+        left = 8;
       }
 
       if (analogRead(RIGHT) >= 150){
-        right = 1;
+        right = 4;
       }
 
       res -= backward + left + right;
       break;
     case 2:
       if (analogRead(FRONT) >= 150){
-        forward = 1;
+        forward = 2;
       }
 
       if (analogRead(LEFT) >= 150){
-        right = 1;
+        right = 4;
       }
 
       if (analogRead(RIGHT) >= 150){
-        left = 1;
+        left = 8;
       }
 
       res -= forward + left + right;
       break;
     case 4:
       if (analogRead(FRONT) >= 150){
-        right = 1;
-      }
-
-      if (analogRead(LEFT) >= 150){
-        forward = 1;
-      }
-
-      if (analogRead(RIGHT) >= 150){
-        left = 1;
-      }
-
-      res -= forward + left + right;
-      break;
-    case 8:
-      if (analogRead(FRONT) >= 150){
-        left = 1;
+        right = 4;
       }
 
       if (analogRead(LEFT) >= 150){
@@ -399,7 +441,22 @@ byte updateWalls(){
       }
 
       if (analogRead(RIGHT) >= 150){
-        forward = 1;
+        forward = 2;
+      }
+
+      res -= forward + backward + right;
+      break;
+    case 8:
+      if (analogRead(FRONT) >= 150){
+        left = 8;
+      }
+
+      if (analogRead(LEFT) >= 150){
+        forward = 2;
+      }
+
+      if (analogRead(RIGHT) >= 150){
+        backward = 1;
       }
 
       res -= backward + left + forward;
@@ -415,33 +472,33 @@ void floodfill(coord current, coord goals[]){
   maze[current.x][current.y].walls = updateWalls();
   coords.push(current);
 
-  for (int i = 0; i < sizeof(orientation); i++){
+  for (int i = 0; i < 4; i++){
     //if there is a wall in this direction
-    if (maze[current.x][current.y].walls & orientation[i] == 0){
+    if (byte(maze[current.x][current.y].walls & orientation[i] == 0)){
       coord temp = {current.x, current.y};
 
       //add walls to a cell
       switch(orientation[i]){
         case 1:
-          temp.y = temp.y - 1;
+          temp.x = temp.x - 1;
           updatecoord(temp,2);
           break;
         case 2:
-          temp.y = temp.y + 1;
+          temp.x = temp.x + 1;
           updatecoord(temp,1);
           break;
         case 4:
-          temp.x = temp.x + 1;
+          temp.y = temp.y + 1;
           updatecoord(temp,8);
           break;
         case 8:
-          temp.x = temp.x - 1;
+          temp.y = temp.y - 1;
           updatecoord(temp,4);
           break;
       }
 
       //if the coord is a valid entry and not the goal, push it onto the stack
-      if (isValid(temp) && !win(temp,goals)){
+      if ((isValid(temp) && !win(temp,goals))){
         coords.push(temp);
       }
     }
@@ -454,10 +511,10 @@ void floodfill(coord current, coord goals[]){
     if (neighCheck + 1 != maze[cur.x][cur.y].distance){
       maze[cur.x][cur.y].distance = neighCheck + 1;
 
-      for (int i = 0; i > sizeof(orientation); i++){
+      for (int i = 0; i < 4; i++){
         byte dir = orientation[i];
         //no walls in this direction
-        if ((maze[cur.x][cur.y]).walls & dir != 0){
+        if (byte(maze[cur.x][cur.y].walls & dir != 0)){
           coord next = getNewCoordinate(cur,dir);
           if (isValid(next)){
             if (!win(next,goals)){
@@ -535,7 +592,7 @@ command createCommand(coord current, coord next, byte heading){
   return aMove;
 }
 
-void executeCommand(command cmd){
+void executeCommand(command cmd, int num){
   switch (cmd.orientation){
     case 0:
       turnLeft();
@@ -547,7 +604,11 @@ void executeCommand(command cmd){
       turn180();
       break;
   }
-  forwardOneBlock();
+  if (num == 0){
+    forwardOneBlock();
+  } else{
+    forwardOneBlockFaster();
+  }
   delay(100);
 }
 
@@ -563,7 +624,7 @@ void solveMaze(coord goals[], coord current, bool isMoving){
 
     if (isMoving){
       commands.push(createCommand(cur, next, nextHeading));
-      executeCommand(commands.pop());
+      executeCommand(commands.pop(),0);
     }
 
     //After executing the command update the values of the local and global variable
@@ -591,14 +652,14 @@ void reflood(){
   solveMaze(desired, cur, false);
 
   //NOW WE RUN FAST
-  speedRun();
+  speedRun(desired);
 }
 
-void speedRun(){
+void speedRun(coord goals[]){
   coord cur = globalCoord;
   byte dir = globalHeading;
 
-  while ((cur.x != globalEnd.x) && (cur.y != globalEnd.y)){
+  while (!win(cur, goals)){
     byte optimalDir = optimalDirection(cur,dir);
     coord next = getNewCoordinate(cur,optimalDir);
 
@@ -663,6 +724,15 @@ void instantiateReFlood(){
 }
 
 void loop(){
+//  Serial.println("123");
+//  delay(500);
+  //turnLeft();
+  //Serial.println(analogRead(RIGHT));
+  stepper2.move(1000);
+//  stepper2.move(1);
+//  Serial.println("FUCK MY LIFE");
+  delay(500);
+//  while (analogRead(FRONT) <= 150);
 //  coord goals[] = {{(X/2)-1,(Y/2)-1},{(X/2)-1,(Y/2)},{(X/2),(Y/2)-1},{X/2,Y/2}};
 //  solveMaze(goals, globalCoord, true);
 //  coord returnCoord[] = {{0,0}};
@@ -671,7 +741,9 @@ void loop(){
 //
 //  reflood();
 //
+//  while(analogRead(FRONT) <= 150);
 //  while (!commands.isEmpty()){
-//    executeCommand(commands.pop());
+//    executeCommand(commands.pop(),1);
 //  }
 }
+
