@@ -221,7 +221,7 @@ void wallhugging(){
     }
   } else{
     rotateRight90();
-    delay(500);
+    delay(100);
   }
 }
 //Backup one grid following left wall.
@@ -294,7 +294,7 @@ void forwardOneBlock(){
            stepper2.move(-1);
            i++;
         }
-        delay(20);
+        delay(10);
     }
 }
 
