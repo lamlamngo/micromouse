@@ -369,7 +369,7 @@ void floodfill(coord current, coord goals[]){
   }
 }
 
-command createCommand(coord current, coord new, byte heading){
+command createCommand(coord current, coord next, byte heading){
   //0: left
   //1: right
   //2: 180
@@ -447,6 +447,7 @@ void executeCommand(command cmd){
       break;
   }
   forwardOneBlock();
+  delay(100);
 }
 
 void solveMaze(coord goals[], coord current, bool isMoving){
@@ -457,10 +458,23 @@ void solveMaze(coord goals[], coord current, bool isMoving){
     floodfill(cur, goals);
 
     byte nextHeading = optimalDirection(cur, heading);
-    coord new = updatecoord(cur, heading);
+    coord next = updatecoord(cur, nextHeading);
 
     if (isMoving){
-      commands.push(create)
+      commands.push(createCommand(cur, next, nextHeading));
+      executeCommand(commands.pop());
+    }
+
+    //After executing the command update the values of the local and global variable
+    cur = next;
+    heading = nextHeading;
+
+    //if the robot has moved, update the global position
+    if (isMoving){
+      globalHeading = heading;
+      globalCoord = cur;
     }
   }
+
+  globalEnd = cur;
 }
