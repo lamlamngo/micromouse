@@ -1,4 +1,6 @@
 #include "BasicStepperDriver.h"
+#include <StackList.h>
+#include <QueueList.h>
 
 //define pin out for sensors
 #define LEFT A4
@@ -50,6 +52,16 @@ typedef struct _command{
   float orientation;
 } command;
 
+//navigation command for the robot
+//implement by a queue to simulate recursion on the robots
+QueueList<command> commands;
+
+int orientation[] = {1,2,3,4};
+
+//maze constant
+#define X 6
+#define Y 6
+
 void setup(){
   stepper1.begin(RPM, MICROSTEPS);
   stepper1.setSpeedProfile(current_mode, accel, decel);
@@ -66,4 +78,117 @@ void setup(){
   pinMode(LEDB, OUTPUT);
   pinMode(LEDG, OUTPUT);
   pinMode(button, OUTPUT);
+}
+
+//calculate optimistic distance from one cell to another cell
+void int calcDist(int x, int y, int goalX, int goalY){
+  return abs(goalY - y) + abs(goalX - x);
+}
+
+//optimistic distance from one cell to the square in the center
+void int calcDistToGoal(int x, int y, int maze_dimension){
+  int center = maze_dimension/2;
+  int dist = 0;
+
+  if (y < center){
+    if (x < center){
+      //top left of the maze
+      dist = calcDist(x,y, (center-1),(center-1)); //distance to top left center
+    } else{
+      //top right
+      dist = calcDist(x,y, (center-1),center);
+    }
+  } else{
+    if (posx > center){
+      //bottom right
+      dist = calcDist(x,y,center,center);
+    } else{
+      //top left
+      dist = calcDist(x,y,center,center-1);
+    }
+  }
+
+  return dist;
+}
+
+//get new coordinate based on the current coord and the heading
+coord getNewCoordinate(coord current, int orientation){
+  coord newCoord = {0,0};
+
+  if (orientation == 0){
+    newCoord.x = current.x;
+    newCoord.y = current.y - 1;
+  } else if (orientation == 1){
+    newCoord.x = current.x - 1;
+    newCoord.y = current.y;
+  } else if (orientation == 2){
+    newcoord.x = current.x + 1;
+    newCoord.y = current.y;
+  } else if (orientation == 3){
+    newCoord.x = current.x;
+    newCoord.y = current.y + 1;
+  }
+
+  return newCoord;
+}
+
+//get neighbors' minimum distance
+int getMinimumNeighbors(coord current){
+  int minVal = -1;
+
+  for (int orient = 0; i < 4; i++){
+
+    //check if accessbile
+
+    if (maze[current.x][current.y].walls && orient != 0){
+      coord neighbor = getNewCoordinate(current, orient);
+
+      //if valid cell
+
+      if (isValid(neighbor)){
+        if (minVal == -1){
+          minval = maze[neighbor.x][neighbor.y].distance;
+        } else{
+          if (maze[neighbor.x][neighbor.y] < minVal){
+            minVal = maze[neighbor.x][neighbor.y].distance;
+          }
+        }
+      }
+    }
+  }
+
+  return minval;
+}
+
+//check if a coord is valid
+bool isValid(coord current){
+  if (current.x < 0 || current.x >= X || current.y < 0 || current.y >= Y){
+    return false;
+  }
+  return true;
+}
+
+//check if a cell is bounded on three sides
+bool isDeadEnd(coord current){
+  if (isValid(current)){
+    int walls = maze[current.x][current.y].walls;
+
+    if (walls == 1 || walls == 2 || walls == 3 || walls == 4){
+      return true; //bounded on three sides
+    }
+    return false;
+  }
+  return false;
+}
+
+bool win(coord current, coord[] goals){
+  if (isValid(current)){
+    for (int i = 0; i < sizeof(goals); i++){
+      if (current.x == goals[i].x && current.y == goals[i].y){
+        return true;
+      }
+    }
+    return false;    
+  }
+  return false;
 }
