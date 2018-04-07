@@ -1,6 +1,6 @@
 #include "BasicStepperDriver.h"
-#include <StackList.h>
-#include <QueueList.h>
+#include <StackArray.h>
+#include <QueueArray.h>
 
 //define pin out for sensors
 #define LEFT A4
@@ -53,13 +53,15 @@ typedef struct _command{
 
 //navigation command for the robot
 //implement by a queue to simulate recursion on the robots
-QueueList<command> commands;
+QueueArray<command> commands;
 
 int orientation[] = {1,2,4,8};
 
 //maze constant
 #define X 6
 #define Y 6
+
+entry maze[X][Y];
 
 byte globalHeading = 4;
 coord globalCoord = {0,0};
@@ -81,6 +83,19 @@ void setup(){
   pinMode(LEDB, OUTPUT);
   pinMode(LEDG, OUTPUT);
   pinMode(button, OUTPUT);
+
+  instantiate();
+  printMaze();
+}
+
+void printMaze(){
+  for(int j=0; j<Y; j++){
+    for(int i=0; i<X; i++){
+      Serial.print(maze[j][i].walls);
+      Serial.print(" ");
+    }
+    Serial.println();
+  }
 }
 
 void turnLeft(){
@@ -93,6 +108,14 @@ void turnLeft(){
 
 void turnRight(){
   for (int i = 0; i < 95; i++){
+    stepper1.move(-1);
+    stepper2.move(1);
+    delay(20);
+  }
+}
+
+void turn180(){
+  for (int i = 0; i < 95*2; i++){
     stepper1.move(-1);
     stepper2.move(1);
     delay(20);
@@ -176,7 +199,7 @@ int calcDistToGoal(byte x, byte y, byte maze_dimension){
       dist = calcDist(x,y, (center-1),center);
     }
   } else{
-    if (posx > center){
+    if (x > center){
       //bottom right
       dist = calcDist(x,y,center,center);
     } else{
@@ -199,7 +222,7 @@ coord getNewCoordinate(coord current, int orientation){
     newCoord.x = current.x;
     newCoord.y = current.y + 1;
   } else if (orientation == 4){
-    newcoord.x = current.x + 1;
+    newCoord.x = current.x + 1;
     newCoord.y = current.y;
   } else if (orientation == 8){
     newCoord.x = current.x - 1;
@@ -224,9 +247,9 @@ int getMinimumNeighbors(coord current){
 
       if (isValid(neighbor)){
         if (minVal == -1){
-          minval = maze[neighbor.x][neighbor.y].distance;
+          minVal = maze[neighbor.x][neighbor.y].distance;
         } else{
-          if (maze[neighbor.x][neighbor.y] < minVal){
+          if (maze[neighbor.x][neighbor.y].distance < minVal){
             minVal = maze[neighbor.x][neighbor.y].distance;
           }
         }
@@ -234,7 +257,7 @@ int getMinimumNeighbors(coord current){
     }
   }
 
-  return minval;
+  return minVal;
 }
 
 //check if a coord is valid
@@ -286,7 +309,7 @@ int optimalDirection(coord current, int heading){
   int leastDir = heading;
 
   if (maze[current.x][current.y].walls & heading != 0){
-    coord leastnextTemp = updatecoord(current, heading);
+    coord leastnextTemp = getNewCoordinate(current, heading);
 
     if (isValid(leastnextTemp)){
       leastNext = leastnextTemp;
@@ -298,7 +321,7 @@ int optimalDirection(coord current, int heading){
     int dir = orientation[i];
 
     if (maze[current.x][current.y].walls & dir != 0){
-      coord dirCoord = updatecoord(current, dir);
+      coord dirCoord = getNewCoordinate(current, dir);
 
       if (isValid(dirCoord)){
         if (maze[dirCoord.x][dirCoord.y].distance < leastNextVal){
@@ -334,7 +357,7 @@ byte updateWalls(){
         right = 1;
       }
 
-      wallReading -= backward + left + right;
+      res -= backward + left + right;
       break;
     case 2:
       if (analogRead(FRONT) >= 150){
@@ -349,7 +372,7 @@ byte updateWalls(){
         left = 1;
       }
 
-      wallReading -= forward + left + right;
+      res -= forward + left + right;
       break;
     case 4:
       if (analogRead(FRONT) >= 150){
@@ -364,7 +387,7 @@ byte updateWalls(){
         left = 1;
       }
 
-      wallReading -= forward + left + right;
+      res -= forward + left + right;
       break;
     case 8:
       if (analogRead(FRONT) >= 150){
@@ -379,22 +402,22 @@ byte updateWalls(){
         forward = 1;
       }
 
-      wallReading -= backward + left + forward;
+      res -= backward + left + forward;
       break;
   }
 
-  return wallReading;
+  return res;
 }
 
 void floodfill(coord current, coord goals[]){
-  StackList<coord> coords;
+  StackArray<coord> coords;
 
   maze[current.x][current.y].walls = updateWalls();
   coords.push(current);
 
   for (int i = 0; i < sizeof(orientation); i++){
     //if there is a wall in this direction
-    if (maze[current.x][current.y].walls & orienation[i] == 0){
+    if (maze[current.x][current.y].walls & orientation[i] == 0){
       coord temp = {current.x, current.y};
 
       //add walls to a cell
@@ -418,7 +441,7 @@ void floodfill(coord current, coord goals[]){
       }
 
       //if the coord is a valid entry and not the goal, push it onto the stack
-      if (isValid(temp) && !win(temp,goals){
+      if (isValid(temp) && !win(temp,goals)){
         coords.push(temp);
       }
     }
@@ -428,7 +451,7 @@ void floodfill(coord current, coord goals[]){
     coord cur = coords.pop();
     int neighCheck = getMinimumNeighbors(cur);
     //if the least neighbor of the current is not one less than the current
-    if (neighCheck + 1 != maze[cur.x][cur.y]){
+    if (neighCheck + 1 != maze[cur.x][cur.y].distance){
       maze[cur.x][cur.y].distance = neighCheck + 1;
 
       for (int i = 0; i > sizeof(orientation); i++){
@@ -473,7 +496,7 @@ command createCommand(coord current, coord next, byte heading){
       }
 
       if (globalHeading == 4){
-        diretion = 1;
+        direction = 1;
       }
 
       if (globalHeading == 8){
@@ -536,7 +559,7 @@ void solveMaze(coord goals[], coord current, bool isMoving){
     floodfill(cur, goals);
 
     byte nextHeading = optimalDirection(cur, heading);
-    coord next = updatecoord(cur, nextHeading);
+    coord next = getNewCoordinate(cur, nextHeading);
 
     if (isMoving){
       commands.push(createCommand(cur, next, nextHeading));
@@ -563,9 +586,9 @@ void reflood(){
   instantiateReFlood();
 
   //run flood fill but without actual motion
-  coord desired[] = {{(X/2)-1,(Y/2)-1},{(X/2)-1,(Y/2)},{(X/2),(Y/2)-1},{X/2,Y/2}}
+  coord desired[] = {{(X/2)-1,(Y/2)-1},{(X/2)-1,(Y/2)},{(X/2),(Y/2)-1},{X/2,Y/2}};
   coord cur = {0,0};
-  solveMaze(desired[], cur, false);
+  solveMaze(desired, cur, false);
 
   //NOW WE RUN FAST
   speedRun();
@@ -577,7 +600,7 @@ void speedRun(){
 
   while ((cur.x != globalEnd.x) && (cur.y != globalEnd.y)){
     byte optimalDir = optimalDirection(cur,dir);
-    coord next = updatecoord(cur,optimalDir);
+    coord next = getNewCoordinate(cur,optimalDir);
 
     if (optimalDir == dir){
       commands.push({3});
@@ -640,15 +663,15 @@ void instantiateReFlood(){
 }
 
 void loop(){
-  coord goals[] = {{(X/2)-1,(Y/2)-1},{(X/2)-1,(Y/2)},{(X/2),(Y/2)-1},{X/2,Y/2}};
-  solveMaze(goals, globalCoord, true);
-  coord returnCoord[] = {{0,0}};
-  resetToCoord(returnCoord[0]);
-  floodfill(returnCoord,globalCoord,true);
-
-  reflood();
-
-  while (!commands.isEmpty()){
-    executeCommand(command.pop());
-  }
+//  coord goals[] = {{(X/2)-1,(Y/2)-1},{(X/2)-1,(Y/2)},{(X/2),(Y/2)-1},{X/2,Y/2}};
+//  solveMaze(goals, globalCoord, true);
+//  coord returnCoord[] = {{0,0}};
+//  resetToCoord(returnCoord[0]);
+//  solveMaze(returnCoord,globalCoord,true);
+//
+//  reflood();
+//
+//  while (!commands.isEmpty()){
+//    executeCommand(commands.pop());
+//  }
 }

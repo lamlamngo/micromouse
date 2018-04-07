@@ -251,7 +251,7 @@ void backUpLeft(){
 void forwardOneBlock(){
     int i = 0;
 
-    while(i < 200 && analogRead(FRONT) < 438){
+    while(i < 195 && analogRead(FRONT) < 438){
         if(leftAvailable()){
            if(analogRead(LEFT) > 260 && leftAvailable()){
               stepper2.move(-1);
