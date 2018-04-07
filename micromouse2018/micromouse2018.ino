@@ -67,7 +67,28 @@ void setup() {
 }
 
 void loop() {
-  wallhungging();
+  wallhugging();
+  //wallhugging();
+//  if (checkFront()){
+//    resetLEDs();
+////    digitalWrite(LEDR,HIGH);
+//    forwardOneBlock();
+//  } else if (checkLeft()){
+//    resetLEDs();
+////    digitalWrite(LEDB,HIGH);
+//    rotateRight90();
+//  } else if (checkRight()){
+//    resetLEDs();
+////    digitalWrite(LEDG,HIGH);
+//    rotateLeft90();
+//  } else{
+//    resetLEDs();
+////    digitalWrite(LEDR,HIGH);
+////    digitalWrite(LEDG,HIGH);
+////    digitalWrite(LEDB,HIGH);
+//    rotate180();
+//  }
+//  delay(1000);
 }
 
 void resetLEDs(){
@@ -189,32 +210,19 @@ void navieRight(){
     }
 }
 
-bool flagl = false;
-bool flagf = true;
-void wallhungging(){
+void wallhugging(){
   if (leftAvailable()){
-    flagl = true;
-  } else{
-    flagl = false;
-  }
-
-  if (flagl){
-    if (!checkFront()){
-      flagf = true;
-    } else{
-      flagf = false;
-    }
-
-    if (!flagf){
+    if (analogRead(FRONT) < 150){
       forwardOneBlock();
+      delay(500);
     } else{
-      rotateRight90();
+      rotateLeft90();
+      delay(500);
     }
   } else{
-    rotateLeft90();
+    rotateRight90();
+    delay(500);
   }
-
-  delay(400);
 }
 //Backup one grid following left wall.
 void backUpLeft(){
@@ -245,15 +253,15 @@ void forwardOneBlock(){
 
     while(i < 200 && analogRead(FRONT) < 438){
         if(leftAvailable()){
-           if(analogRead(LEFT) > 260){
-              stepper1.move(-1);
+           if(analogRead(LEFT) > 260 && leftAvailable()){
               stepper2.move(-1);
               stepper1.move(-1);
+              stepper2.move(-1);
               i += 1;}
-           else if(analogRead(LEFT) < 220){
-              stepper2.move(-1);
+           else if(analogRead(LEFT) < 220 && leftAvailable()){
               stepper1.move(-1);
               stepper2.move(-1);
+              stepper1.move(-1);
               i += 1;
            }
            else{
@@ -263,16 +271,16 @@ void forwardOneBlock(){
            }
         }
         else if(rightAvailable()){
-           if(analogRead(RIGHT) > 260){
-              stepper2.move(-1);
+           if(analogRead(RIGHT) > 260 && rightAvailable()){
               stepper1.move(-1);
               stepper2.move(-1);
+              stepper1.move(-1);
               i += 1;;
               }
-           else if(analogRead(RIGHT) < 220){
-              stepper1.move(-1);
+           else if(analogRead(RIGHT) < 220 && rightAvailable()){
               stepper2.move(-1);
               stepper1.move(-1);
+              stepper2.move(-1);
               i += 1;
            }
            else{
