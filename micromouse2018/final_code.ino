@@ -48,8 +48,7 @@ typedef struct _entry{
 
 //struct for a command
 typedef struct _command{
-  float pos;
-  float orientation;
+  int orientation;
 } command;
 
 //navigation command for the robot
@@ -370,11 +369,98 @@ void floodfill(coord current, coord goals[]){
   }
 }
 
-void solveMaze(coord goals[], coord current, boolean isMoving){
+command createCommand(coord current, coord new, byte heading){
+  //0: left
+  //1: right
+  //2: 180
+  //3: stay
+  int direction = 3;
+  switch(heading){
+    case 1:
+      if (globalHeading == 2){
+        direction = 2;
+      }
+
+      if (globalHeading == 4){
+        direction = 0;
+      }
+
+      if (globalHeading == 8){
+        direction = 1;
+      }
+      break;
+    case 2:
+      if (globalHeading == 1){
+        direction = 2;
+      }
+
+      if (globalHeading == 4){
+        diretion = 1;
+      }
+
+      if (globalHeading == 8){
+        direction = 0;
+      }
+      break;
+    case 4:
+      if (globalHeading == 1){
+        direction = 1;
+      }
+
+      if (globalHeading == 2){
+        direction = 0;
+      }
+
+      if (globalHeading == 8){
+        direction = 2;
+      }
+      break;
+    case 8:
+      if (globalHeading == 1){
+        direction = 0;
+      }
+
+      if (globalHeading == 2){
+        direction = 1;
+      }
+
+      if (globalHeading == 4){
+        direction = 2;
+      }
+      break;
+  }
+
+  command aMove = {direction};
+  return aMove;
+}
+
+void executeCommand(command cmd){
+  switch (cmd.orientation){
+    case 0:
+      turnLeft();
+      break;
+    case 1:
+      turnRight();
+      break;
+    case 2:
+      turn180();
+      break;
+  }
+  forwardOneBlock();
+}
+
+void solveMaze(coord goals[], coord current, bool isMoving){
   coord cur = current;
   byte heading = globalHeading;
 
   while (maze[cur.x][cur.y].distance != 0){
     floodfill(cur, goals);
+
+    byte nextHeading = optimalDirection(cur, heading);
+    coord new = updatecoord(cur, heading);
+
+    if (isMoving){
+      commands.push(create)
+    }
   }
 }
