@@ -2,11 +2,23 @@ public class Cell {
     private int distance;
     private byte walls;
     private boolean visited;
+    private int x;
+    private int y;
 
-    public Cell(int distance, byte walls){
+    public Cell(int x, int y, int distance, byte walls){
         this.distance = distance;
         this.walls = walls;
         visited = false;
+        this.x = x;
+        this.y = y;
+    }
+
+    public int getX(){
+        return x;
+    }
+
+    public int getY(){
+        return y;
     }
 
     public boolean isVisited(){
