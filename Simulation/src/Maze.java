@@ -11,6 +11,14 @@ public class Maze{
     }
 
     public void generate(){
-        
+
+    }
+
+    private void initiate(){
+        for (int i = 0; i < x; i++){
+            for (int j = 0; j < y; j++){
+                maze[i][j].setWalls((byte)15);
+            }
+        }
     }
 }
