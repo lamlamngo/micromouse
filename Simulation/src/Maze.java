@@ -24,16 +24,16 @@ public class Maze{
     private void recurseGenerate(int x, int y){
         if (isValid(x,y)){
             ArrayList<Cell> neigh = new ArrayList<>();
-            if (isValid(x+1,y)){
+            if (isValid(x+1,y) && !maze[x+1][y].isVisited()){
                 neigh.add(maze[x+1][y]);
             }
-            if (isValid(x-1,y)){
+            if (isValid(x-1,y) && !maze[x-1][y].isVisited()){
                 neigh.add(maze[x-1][y]);
             }
-            if (isValid(x,y+1)){
+            if (isValid(x,y+1) && !maze[x][y+1].isVisited()){
                 neigh.add(maze[x][y+1]);
             }
-            if (isValid(x,y-1)){
+            if (isValid(x,y-1) && !maze[x][y-1].isVisited()){
                 neigh.add(maze[x][y-1]);
             }
             Collections.shuffle(neigh);
@@ -52,7 +52,7 @@ public class Maze{
                     newCell.updateWalls((byte) 8);
                     maze[x][y].updateWalls((byte) 4);
                 }
-
+                newCell.setVisited(true);
                 recurseGenerate(newCell.getX(), newCell.getY());
             }
         }
@@ -68,5 +68,22 @@ public class Maze{
                 maze[i][j] = new Cell(i,j,0,(byte)15);
             }
         }
+    }
+
+    public void display(){
+        for (int i = 0; i < X; i++) {
+            for (int j = 0; j < Y; j++) {
+                System.out.print(maze[i][j].getWalls() + " ");
+            }
+            System.out.println("\n");
+        }
+    }
+
+
+    public static void main(String[] args) {
+       Maze aMaze = new Maze(4,4);
+       aMaze.initiate();
+       aMaze.generate();
+       aMaze.display();
     }
 }

@@ -25,8 +25,8 @@ public class Cell {
         return visited;
     }
 
-    public void setVisited(){
-        this.visited = true;
+    public void setVisited(boolean val){
+        this.visited = val;
     }
 
     public void setDistance(int distance){
